@@ -1,122 +1,193 @@
-# Time-Locked Wallet - Solana Playground Example
+# Time-Locked Wallet - Anchor Framework Demo
 
-A Solana program that demonstrates how to create a time-locked wallet for SOL, built with Anchor framework and testable in Solana Playground.
+A demonstration of building a Solana program using the Anchor framework, featuring comprehensive testing with Jest. This example showcases how to create a time-locked wallet for SOL tokens.
 
-## Program Features
+## Core Features
 
-- 🔒 Create time-locked wallets
-- 💰 Multiple SOL deposits
-- ⏰ Time-based withdrawals
-- 🏦 Rent-exempt balance handling
-- 🧹 Account cleanup
-
-## Try it in Solana Playground
-
-### 1. Setup
-
-<img src="./assets/images/setup.png" width="70%" alt="Setup in Playground"/>
-
-1. Visit [Solana Playground](https://beta.solpg.io)
-2. Create a new project
-3. Copy the program code
-
-### 2. Create and connect a Wallet
-
-<img src="./assets/images/create-wallet.png" width="70%" alt="Create Wallet"/>
-
-1. Click on the left corner and create and connect your wallet.
-2. Switch to devnet cluster if needed.
-
-### 3. Build the program using the build button
-
-<img src="./assets/images/build-program.png" width="70%" alt="Build Program"/>
-
-### 4. Deploy the program using the build button
-
-<img src="./assets/images/deploy-program.png" width="70%" alt="Deploy Program"/>
-
-### 5. Testing the initialize of the wallet
-
-<img src="./assets/images/test-initialize.png" width="70%" alt="Test Program"/>
-
-1. We need to build the wallet PDA from seed using 3 components:
-
-   <img src="./assets/images/from-seed.png" width="20%" alt="Seed"/>
-
-   - Seed string that we used in our code "wallet"
-
-     <img src="./assets/images/string-seed.png" width="20%" alt="Insert String Seed"/>
-
-   - The owner public key
-
-     <img src="./assets/images/key-seed.png" width="20%" alt="Insert Owner Public Key"/>
-
-   - The program ID - (automatically passed)
-
-     <img src="./assets/images/pda-generate.png" width="20%" alt="PDA Generate"/>
-
-2. We can test our initialize wallet function with pressing the test button.
-
-   <img src="./assets/images/test-passed.png" width="40%" alt="Test Passed"/>
-
-### 6. Deposit SOL
-
-<img src="./assets/images/deposit.png" width="40%" alt="Deposit SOL"/>
-
-1. We can deposit 0.1 SOL. Please note that we are using lampports.
-2. We can press the test button:
-
-   <img src="./assets/images/deposit-successfull.png" width="40%" alt="Deposit Successful"/>
-
-### 7. Withdraw SOL
-
-<img src="./assets/images/withdraw.png" width="40%" alt="Withdraw SOL"/>
-
-1. We can withdraw the SOL amount similarly as we deposited it.
-2. The wallet ID that we need to pass it the same PDA that we've derived in step 5:
-
-   <img src="./assets/images/withdraw-successfull.png" width="50%" alt="Withdraw Successful"/>
-
-### 8. Close Wallet
-
-<img src="./assets/images/close.png" width="40%" alt="Close Wallet"/>
-
-1. We can close the account.
-
-   <img src="./assets/images/close-successfull.png" width="50%" alt="Close Successful"/>
-
-## Common Issues & Solutions
-
-### 1. "Too Early" Error
-
-- Occurs when trying to withdraw before release time
-- Solution: Wait until release time or create new wallet with shorter timelock
-
-### 2. Account Already Exists
-
-- Occurs when creating a wallet that already exists
-- Solution: Close existing wallet first or use different address
-
-### 3. Insufficient Balance
-
-- Occurs when lacking SOL for rent or deposit
-- Solution: Fund your wallet with devnet SOL
-
-## Complete Testing Flow
-
-1. Create wallet (5-min lock)
-2. Deposit 0.1 SOL
-3. Try withdraw (fails)
-4. Wait 5 minutes
-5. Withdraw (succeeds)
-6. Close wallet
+- 🔒 Testing Time-locked wallet creation with PDA (Program Derived Address)
+- 💰 Testing SOL deposit functionality
+- ⏰ Testing Time-based withdrawal mechanism
+- 🏦 Testing Rent-exempt balance handling
+- 🧹 Testing Account cleanup and closure
 
 ## Program Architecture
 
-<img src="./assets/images/architecture.png" width="80%" alt="Program Architecture"/>
+### Core Functions
 
-## Need Help?
+1. **create_wallet**
 
-- 📚 [Solana Cookbook](https://solanacookbook.com)
-- 💬 [Solana Stack Exchange](https://solana.stackexchange.com)
+   ```typescript
+   public async createWallet(owner: PublicKey, releaseTime: number)
+   ```
+
+   - Creates a new time-locked wallet
+   - Uses PDA derived from owner's public key
+   - Sets release time and initializes state
+
+2. **deposit**
+
+   ```typescript
+   public async deposit(owner: PublicKey, amount: number)
+   ```
+
+   - Deposits SOL into the wallet
+   - Handles rent-exempt reserve
+   - Updates account balance
+
+3. **withdraw**
+
+   ```typescript
+   public async withdraw(owner: PublicKey)
+   ```
+
+   - Validates release time
+   - Handles rent-exempt balance retention
+   - Transfers funds to owner
+
+4. **close_wallet**
+   ```typescript
+   public async closeWallet(owner: PublicKey)
+   ```
+   - Closes the wallet account
+   - Returns rent to owner
+   - Cleanup PDA
+
+## Project Structure and Testing Setup
+
+This project, created with `create-solana-dapp`, implements a full-stack architecture with distinct testing approaches:
+
+```
+/
+├── src/                  # Frontend (Next.js)
+│   ├── app/             # Next.js pages
+│   └── components/      # React components
+└── anchor/              # Solana program (Backend)
+    └── tests/          # Program tests
+```
+
+### Testing Architecture
+
+Our project uses Jest across both frontend and backend, which differs from a standard Anchor project setup:
+
+1. **Standard Anchor Projects**
+
+   - Typically use Mocha/Chai
+   - Default testing framework for Anchor
+   - Common in standalone Solana programs
+
+2. **Our Setup (via create-solana-dapp)**
+   - Uses Jest for consistency across the stack
+   - Tests both frontend and backend components
+   - Adapts Anchor tests to use Jest syntax
+
+### Why This Approach?
+
+`create-solana-dapp` configures Jest as the unified testing framework because:
+
+- Provides consistent testing syntax across frontend and backend
+- Leverages Jest's modern features for both layers
+- Simplifies the development experience with a single testing framework
+
+Example of our Jest syntax in Anchor tests:
+
+```typescript
+describe("time_locked_wallet", () => {
+  it("Creates a time-locked wallet", async () => {
+    // ... test implementation
+    expect(walletAccount.owner.toString()).toBe(wallet.publicKey.toString());
+  });
+});
+```
+
+Same test in traditional Anchor style (Mocha/Chai):
+
+```typescript
+describe("time_locked_wallet", () => {
+  it("Creates a time-locked wallet", async () => {
+    // ... test implementation
+    assert.equal(walletAccount.owner.toString(), wallet.publicKey.toString());
+  });
+});
+```
+
+### Running Tests
+
+```bash
+# For Anchor program tests (in anchor directory)
+cd anchor && anchor test
+```
+
+## Testing Examples
+
+### 1. Wallet Creation Test
+
+```typescript
+it("creates a time-locked wallet", async () => {
+  const releaseTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+
+  await program.methods
+    .createWallet(new BN(releaseTime))
+    .accounts({
+      owner: provider.wallet.publicKey,
+      wallet: walletPDA,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc();
+
+  const walletAccount = await program.account.wallet.fetch(walletPDA);
+  expect(walletAccount.owner).toEqual(provider.wallet.publicKey);
+  expect(walletAccount.releaseTime.toNumber()).toEqual(releaseTime);
+});
+```
+
+### 2. Deposit Test
+
+```typescript
+it("deposits SOL into wallet", async () => {
+  const depositAmount = new BN(1_000_000_000); // 1 SOL
+  const initialBalance = await provider.connection.getBalance(walletPDA);
+
+  await program.methods
+    .deposit(depositAmount)
+    .accounts({
+      owner: provider.wallet.publicKey,
+      wallet: walletPDA,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc();
+
+  const finalBalance = await provider.connection.getBalance(walletPDA);
+  expect(finalBalance - initialBalance).toEqual(depositAmount.toNumber());
+});
+```
+
+### 3. Time-Based Withdrawal Test
+
+```typescript
+it("prevents early withdrawal", async () => {
+  await expect(
+    program.methods
+      .withdraw()
+      .accounts({
+        owner: provider.wallet.publicKey,
+        wallet: walletPDA,
+      })
+      .rpc()
+  ).rejects.toThrow("TooEarly");
+});
+```
+
+## Testing Best Practices
+
+1. **Isolation**: Each test should run independently
+2. **Clean State**: Reset state between tests
+3. **Mock Time**: Use Jest's timer mocks for time-dependent tests
+4. **Error Cases**: Test both success and failure scenarios
+5. **Coverage**: Aim for high test coverage
+
+## Resources
+
+- 📚 [Anchor Documentation](https://www.anchor-lang.com/)
+- 🧪 [Jest Documentation](https://jestjs.io/)
+- 💻 [Solana Cookbook](https://solanacookbook.com)
 - 🤝 [Solana Discord](https://discord.com/invite/solana)
