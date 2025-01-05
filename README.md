@@ -1,153 +1,122 @@
-# Supercharging Solana dApp Development: Developer Tooling Overview
+# Time-Locked Wallet - Solana Playground Example
 
-Welcome to the **Supercharging Solana dApp Development** workshop! This repository contains materials and code examples to help you explore the rich ecosystem of tools available for Solana dApp development.
+A Solana program that demonstrates how to create a time-locked wallet for SOL, built with Anchor framework and testable in Solana Playground.
 
-This project was generated using `npx create-solana-dapp` with the following options:
+## Program Features
 
-- Framework: **Next.js**
-- Styling: **TailwindCSS**
-- Template: **Basic Project**
+- 🔒 Create time-locked wallets
+- 💰 Multiple SOL deposits
+- ⏰ Time-based withdrawals
+- 🏦 Rent-exempt balance handling
+- 🧹 Account cleanup
 
-## Agenda
+## Try it in Solana Playground
 
-1. **Overview of Solana dApp Development**
-   - Where to start from
-   - Useful websites and tools
-   - What is the workflow of Solana dApp development
-2. **Developer Tools and Their Use Cases**
-   - Frameworks
-   - Testing
-   - Monitoring
-   - FE Integration
-   - Code Quality
-3. **Hands-On Demos**
-   - Switching between GitHub branches for each tool.
-   - Highlighting **Zest** for code coverage.
+### 1. Setup
 
----
+<img src="./assets/images/setup.png" width="70%" alt="Setup in Playground"/>
 
-## Tools Covered
+1. Visit [Solana Playground](https://beta.solpg.io)
+2. Create a new project
+3. Copy the program code
 
-1. **Solana Playground**: Quick prototyping and experimentation.
-2. **Anchor Framework** - For programs (smart contract) development.
-3. **Bankrun** - Modern testing for Solana programs.
-4. **Metaplex SDK** - Tools for NFTs and marketplaces.
-5. **Helius API** - Real-time monitoring and transaction indexing.
-6. **Solana Wallet Adapter** - Simplified wallet integration.
-7. **Zest** - Code coverage for Solana projects.
+### 2. Create and connect a Wallet
 
----
+<img src="./assets/images/create-wallet.png" width="70%" alt="Create Wallet"/>
 
-## Description
+1. Click on the left corner and create and connect your wallet.
+2. Switch to devnet cluster if needed.
 
-### Slides
+### 3. Build the program using the build button
 
-The slides for the workshop can be found in the [slides](./slides/) directory.
+<img src="./assets/images/build-program.png" width="70%" alt="Build Program"/>
 
----
+### 4. Deploy the program using the build button
 
-### Branches for Demos
+<img src="./assets/images/deploy-program.png" width="70%" alt="Deploy Program"/>
 
-Each branch in this repository contains a ready-to-use example with readme for the respective tool. Use the following branches:
+### 5. Testing the initialize of the wallet
 
-- **`demo-solana-playground`**: Example using the Solana Playground.
-- **`demo-anchor`**: Example using the Anchor framework.
-- **`demo-bankrun`**: Testing Solana programs with Bankrun.
-- **`demo-metaplex`**: NFT minting and marketplace setup.
-- **`demo-wallet-integration`**: Wallet Adapter integration.
-- **`demo-monitoring`**: Using Helius API for monitoring.
-- **`demo-zest`**: Generating code coverage reports with Zest.
+<img src="./assets/images/test-initialize.png" width="70%" alt="Test Program"/>
 
----
+1. We need to build the wallet PDA from seed using 3 components:
 
-## What do you need
+   <img src="./assets/images/from-seed.png" width="20%" alt="Seed"/>
 
-### Prerequisites
+   - Seed string that we used in our code "wallet"
 
-- Node v18.18.0 or higher
+     <img src="./assets/images/string-seed.png" width="20%" alt="Insert String Seed"/>
 
-- Rust v1.77.2 or higher
-- Anchor CLI 0.30.1 or higher
-- Solana CLI 1.18.17 or higher
+   - The owner public key
 
-### Installation
+     <img src="./assets/images/key-seed.png" width="20%" alt="Insert Owner Public Key"/>
 
-#### Clone the repo
+   - The program ID - (automatically passed)
 
-```shell
-git clone https://github.com/ochikov/supercharging-solana-dapps.git
-```
+     <img src="./assets/images/pda-generate.png" width="20%" alt="PDA Generate"/>
 
-#### Install Dependencies
+2. We can test our initialize wallet function with pressing the test button.
 
-```shell
-pnpm install
-```
+   <img src="./assets/images/test-passed.png" width="40%" alt="Test Passed"/>
 
-#### Start the web app
+### 6. Deposit SOL
 
-```
-pnpm dev
-```
+<img src="./assets/images/deposit.png" width="40%" alt="Deposit SOL"/>
 
-## Apps
+1. We can deposit 0.1 SOL. Please note that we are using lampports.
+2. We can press the test button:
 
-### anchor
+   <img src="./assets/images/deposit-successfull.png" width="40%" alt="Deposit Successful"/>
 
-This is a Solana program written in Rust using the Anchor framework.
+### 7. Withdraw SOL
 
-#### Commands
+<img src="./assets/images/withdraw.png" width="40%" alt="Withdraw SOL"/>
 
-You can use any normal anchor commands. Either move to the `anchor` directory and run the `anchor` command or prefix the command with `pnpm`, eg: `pnpm anchor`.
+1. We can withdraw the SOL amount similarly as we deposited it.
+2. The wallet ID that we need to pass it the same PDA that we've derived in step 5:
 
-#### Sync the program id:
+   <img src="./assets/images/withdraw-successfull.png" width="50%" alt="Withdraw Successful"/>
 
-Running this command will create a new keypair in the `anchor/target/deploy` directory and save the address to the Anchor config file and update the `declare_id!` macro in the `./src/lib.rs` file of the program.
+### 8. Close Wallet
 
-You will manually need to update the constant in `anchor/lib/basic-exports.ts` to match the new program id.
+<img src="./assets/images/close.png" width="40%" alt="Close Wallet"/>
 
-```shell
-pnpm anchor keys sync
-```
+1. We can close the account.
 
-#### Build the program:
+   <img src="./assets/images/close-successfull.png" width="50%" alt="Close Successful"/>
 
-```shell
-pnpm anchor-build
-```
+## Common Issues & Solutions
 
-#### Start the test validator with the program deployed:
+### 1. "Too Early" Error
 
-```shell
-pnpm anchor-localnet
-```
+- Occurs when trying to withdraw before release time
+- Solution: Wait until release time or create new wallet with shorter timelock
 
-#### Run the tests
+### 2. Account Already Exists
 
-```shell
-pnpm anchor-test
-```
+- Occurs when creating a wallet that already exists
+- Solution: Close existing wallet first or use different address
 
-#### Deploy to Devnet
+### 3. Insufficient Balance
 
-```shell
-pnpm anchor deploy --provider.cluster devnet
-```
+- Occurs when lacking SOL for rent or deposit
+- Solution: Fund your wallet with devnet SOL
 
-### web
+## Complete Testing Flow
 
-This is a React app that uses the Anchor generated client to interact with the Solana program.
+1. Create wallet (5-min lock)
+2. Deposit 0.1 SOL
+3. Try withdraw (fails)
+4. Wait 5 minutes
+5. Withdraw (succeeds)
+6. Close wallet
 
-#### Commands
+## Program Architecture
 
-Start the web app
+<img src="./assets/images/architecture.png" width="80%" alt="Program Architecture"/>
 
-```shell
-pnpm dev
-```
+## Need Help?
 
-Build the web app
-
-```shell
-pnpm build
-```
+- 📚 [Solana Cookbook](https://solanacookbook.com)
+- 💬 [Solana Stack Exchange](https://solana.stackexchange.com)
+- 🤝 [Solana Discord](https://discord.com/invite/solana)
