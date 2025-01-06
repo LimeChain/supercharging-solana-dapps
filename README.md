@@ -1,153 +1,192 @@
-# Supercharging Solana dApp Development: Developer Tooling Overview
+# Time-Locked Wallet - Using Solana Bankrun for Testing
 
-Welcome to the **Supercharging Solana dApp Development** workshop! This repository contains materials and code examples to help you explore the rich ecosystem of tools available for Solana dApp development.
+## Testing with Bankrun
 
-This project was generated using `npx create-solana-dapp` with the following options:
+### Why Bankrun over Traditional Tests?
 
-- Framework: **Next.js**
-- Styling: **TailwindCSS**
-- Template: **Basic Project**
+Solana Bankrun provides several significant advantages over traditional testing approaches:
 
-## Agenda
+1. **Speed & Efficiency**
 
-1. **Overview of Solana dApp Development**
-   - Where to start from
-   - Useful websites and tools
-   - What is the workflow of Solana dApp development
-2. **Developer Tools and Their Use Cases**
-   - Frameworks
-   - Testing
-   - Monitoring
-   - FE Integration
-   - Code Quality
-3. **Hands-On Demos**
-   - Switching between GitHub branches for each tool.
-   - Highlighting **Zest** for code coverage.
+   - No need to start a local validator
+   - Tests run significantly faster
+   - Lower resource consumption
 
----
+2. **State Control**
 
-## Tools Covered
+   - Direct manipulation of blockchain state
+   - Ability to modify clock for time-dependent tests
+   - Control over account balances and data
 
-1. **Solana Playground**: Quick prototyping and experimentation.
-2. **Anchor Framework** - For programs (smart contract) development.
-3. **Bankrun** - Modern testing for Solana programs.
-4. **Metaplex SDK** - Tools for NFTs and marketplaces.
-5. **Helius API** - Real-time monitoring and transaction indexing.
-6. **Solana Wallet Adapter** - Simplified wallet integration.
-7. **Zest** - Code coverage for Solana projects.
+3. **Deterministic Testing**
+   - Consistent test environment
+   - No race conditions
+   - Predictable results
 
----
+### Example Bankrun Test
 
-## Description
+```typescript
+describe("Time Locked Wallet Bankrun Tests", () => {
+  let provider: BankrunProvider;
+  let program: Program<TimeLockedWallet>;
+  let banksClient: BanksClient;
 
-### Slides
+  beforeAll(async () => {
+    // Setup bankrun environment
+    context = await startAnchor(
+      "",
+      [{ name: "time_locked_wallet", programId: new PublicKey(IDL.address) }],
+      [
+        /* initial accounts */
+      ]
+    );
 
-The slides for the workshop can be found in the [slides](./slides/) directory.
+    provider = new BankrunProvider(context);
+    program = new Program(IDL as TimeLockedWallet, provider);
+  });
 
----
-
-### Branches for Demos
-
-Each branch in this repository contains a ready-to-use example with readme for the respective tool. Use the following branches:
-
-- **`demo-solana-playground`**: Example using the Solana Playground.
-- **`demo-anchor`**: Example using the Anchor framework.
-- **`demo-bankrun`**: Testing Solana programs with Bankrun.
-- **`demo-metaplex`**: NFT minting and marketplace setup.
-- **`demo-wallet-integration`**: Wallet Adapter integration.
-- **`demo-monitoring`**: Using Helius API for monitoring.
-- **`demo-zest`**: Generating code coverage reports with Zest.
-
----
-
-## What do you need
-
-### Prerequisites
-
-- Node v18.18.0 or higher
-
-- Rust v1.77.2 or higher
-- Anchor CLI 0.30.1 or higher
-- Solana CLI 1.18.17 or higher
-
-### Installation
-
-#### Clone the repo
-
-```shell
-git clone https://github.com/ochikov/supercharging-solana-dapps.git
+  it("Tests time-dependent functionality", async () => {
+    // Manipulate blockchain time
+    const currentClock = await banksClient.getClock();
+    context.setClock(
+      new Clock(
+        currentClock.slot,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        BigInt(futureTimestamp)
+      )
+    );
+  });
+});
 ```
 
-#### Install Dependencies
+### Key Bankrun Features
 
-```shell
-pnpm install
+1. **Clock Manipulation**
+
+```typescript
+context.setClock(new Clock(...));
 ```
 
-#### Start the web app
+- Test time-locked features without waiting
+- Simulate different blockchain timestamps
+- Test schedule-dependent logic
 
-```
-pnpm dev
-```
+2. **Account State Management**
 
-## Apps
-
-### anchor
-
-This is a Solana program written in Rust using the Anchor framework.
-
-#### Commands
-
-You can use any normal anchor commands. Either move to the `anchor` directory and run the `anchor` command or prefix the command with `pnpm`, eg: `pnpm anchor`.
-
-#### Sync the program id:
-
-Running this command will create a new keypair in the `anchor/target/deploy` directory and save the address to the Anchor config file and update the `declare_id!` macro in the `./src/lib.rs` file of the program.
-
-You will manually need to update the constant in `anchor/lib/basic-exports.ts` to match the new program id.
-
-```shell
-pnpm anchor keys sync
+```typescript
+await banksClient.getBalance(walletPDA);
+await banksClient.getAccount(accountPDA);
 ```
 
-#### Build the program:
+- Direct access to account data
+- Easy balance verification
+- Simplified state checks
 
-```shell
-pnpm anchor-build
+3. **Transaction Processing**
+   - Immediate transaction confirmation
+   - No need for confirmation strategies
+   - Reduced test flakiness
+
+### Best Practices with Bankrun
+
+1. **Test Setup**
+
+   - Initialize accounts with specific states
+   - Set up initial balances
+   - Create required PDAs
+
+2. **State Verification**
+
+   - Check account states directly
+   - Verify balances immediately
+   - Validate PDA data
+
+3. **Time Management**
+   - Use clock manipulation for time-dependent tests
+   - Test different time scenarios
+   - Verify time-based constraints
+
+### Common Testing Patterns
+
+1. **Account Creation**
+
+```typescript
+context = await startAnchor(
+  "",
+  [{ programId }],
+  [
+    {
+      address: wallet.publicKey,
+      info: {
+        lamports: LAMPORTS_PER_SOL,
+        owner: SystemProgram.programId,
+        // ... other account info
+      },
+    },
+  ]
+);
 ```
 
-#### Start the test validator with the program deployed:
+2. **Time-Based Testing**
 
-```shell
-pnpm anchor-localnet
+```typescript
+// Advance blockchain time
+context.setClock(
+  new Clock(slot, timestamp, epoch, leaderScheduleEpoch, BigInt(futureTime))
+);
 ```
 
-#### Run the tests
+3. **Balance Verification**
 
-```shell
-pnpm anchor-test
+```typescript
+const balance = await banksClient.getBalance(address);
+expect(Number(balance)).toBe(expectedAmount);
 ```
 
-#### Deploy to Devnet
+## Benefits over Traditional Testing
 
-```shell
-pnpm anchor deploy --provider.cluster devnet
+1. **Development Speed**
+
+   - Faster test execution
+   - Quick iteration cycles
+   - Immediate feedback
+
+2. **Reliability**
+
+   - No network dependencies
+   - Consistent test environment
+   - Deterministic results
+
+3. **Flexibility**
+   - Complete state control
+   - Easy debugging
+   - Comprehensive testing scenarios
+
+## Getting Started with Bankrun
+
+1. **Installation**
+
+```bash
+pnpm add -D solana-bankrun anchor-bankrun
 ```
 
-### web
+2. **Configuration**
 
-This is a React app that uses the Anchor generated client to interact with the Solana program.
-
-#### Commands
-
-Start the web app
-
-```shell
-pnpm dev
+```typescript
+import { BankrunProvider } from "anchor-bankrun";
+import { startAnchor } from "solana-bankrun";
 ```
 
-Build the web app
+3. **Running Tests**
 
-```shell
-pnpm build
+```bash
+anchor test
 ```
+
+## Additional Resources
+
+- [Solana Bankrun Documentation](https://github.com/kevinheavey/solana-bankrun)
+- [Anchor Testing Guide](https://www.anchor-lang.com/docs/testing)
+- [Bankrun Examples](https://github.com/kevinheavey/solana-bankrun/tree/main/examples)
