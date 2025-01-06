@@ -1,192 +1,165 @@
-# Time-Locked Wallet - Using Solana Bankrun for Testing
+# NFT Creation with Metaplex
 
-## Testing with Bankrun
+This example demonstrates how to create NFTs using Metaplex's latest tools and libraries.
 
-### Why Bankrun over Traditional Tests?
+## Prerequisites
 
-Solana Bankrun provides several significant advantages over traditional testing approaches:
-
-1. **Speed & Efficiency**
-
-   - No need to start a local validator
-   - Tests run significantly faster
-   - Lower resource consumption
-
-2. **State Control**
-
-   - Direct manipulation of blockchain state
-   - Ability to modify clock for time-dependent tests
-   - Control over account balances and data
-
-3. **Deterministic Testing**
-   - Consistent test environment
-   - No race conditions
-   - Predictable results
-
-### Example Bankrun Test
-
-```typescript
-describe("Time Locked Wallet Bankrun Tests", () => {
-  let provider: BankrunProvider;
-  let program: Program<TimeLockedWallet>;
-  let banksClient: BanksClient;
-
-  beforeAll(async () => {
-    // Setup bankrun environment
-    context = await startAnchor(
-      "",
-      [{ name: "time_locked_wallet", programId: new PublicKey(IDL.address) }],
-      [
-        /* initial accounts */
-      ]
-    );
-
-    provider = new BankrunProvider(context);
-    program = new Program(IDL as TimeLockedWallet, provider);
-  });
-
-  it("Tests time-dependent functionality", async () => {
-    // Manipulate blockchain time
-    const currentClock = await banksClient.getClock();
-    context.setClock(
-      new Clock(
-        currentClock.slot,
-        currentClock.epochStartTimestamp,
-        currentClock.epoch,
-        currentClock.leaderScheduleEpoch,
-        BigInt(futureTimestamp)
-      )
-    );
-  });
-});
+```bash
+npm add \
+  @metaplex-foundation/mpl-token-metadata \
+  @metaplex-foundation/umi-bundle-defaults \
+  @metaplex-foundation/umi \
+  @solana/web3.js
 ```
 
-### Key Bankrun Features
+## Why Metaplex?
 
-1. **Clock Manipulation**
+Metaplex provides essential tools for NFT creation on Solana:
 
-```typescript
-context.setClock(new Clock(...));
+- Token Metadata Program for NFT standards
+- UMI (Unified Metaplex Interface) for simplified interactions
+- Collection management
+- Metadata verification
+
+## Project Structure
+
+```
+src/
+├── nft-manager.ts    # Main NFT creation logic
+├── utils.ts          # Helper functions
+└── index.ts          # Entry point
 ```
 
-- Test time-locked features without waiting
-- Simulate different blockchain timestamps
-- Test schedule-dependent logic
+## Key Components
 
-2. **Account State Management**
+1. **NFTManager Class**
 
-```typescript
-await banksClient.getBalance(walletPDA);
-await banksClient.getAccount(accountPDA);
-```
+   - Handles collection creation
+   - Manages NFT minting
+   - Verifies collection items
+   - Fetches NFT details
 
-- Direct access to account data
-- Easy balance verification
-- Simplified state checks
+2. **Metadata Structure**
 
-3. **Transaction Processing**
-   - Immediate transaction confirmation
-   - No need for confirmation strategies
-   - Reduced test flakiness
-
-### Best Practices with Bankrun
-
-1. **Test Setup**
-
-   - Initialize accounts with specific states
-   - Set up initial balances
-   - Create required PDAs
-
-2. **State Verification**
-
-   - Check account states directly
-   - Verify balances immediately
-   - Validate PDA data
-
-3. **Time Management**
-   - Use clock manipulation for time-dependent tests
-   - Test different time scenarios
-   - Verify time-based constraints
-
-### Common Testing Patterns
-
-1. **Account Creation**
-
-```typescript
-context = await startAnchor(
-  "",
-  [{ programId }],
-  [
+```json
+{
+  "name": "My NFT",
+  "symbol": "MNFT",
+  "description": "Description",
+  "image": "https://ipfs.io/ipfs/your-image",
+  "attributes": [
     {
-      address: wallet.publicKey,
-      info: {
-        lamports: LAMPORTS_PER_SOL,
-        owner: SystemProgram.programId,
-        // ... other account info
-      },
-    },
+      "trait_type": "Background",
+      "value": "Blue"
+    }
   ]
+}
+```
+
+## Steps
+
+1. **Setup Collection**
+
+```typescript
+const nftManager = new NFTManager(endpoint, user);
+const collectionAddress = await nftManager.createCollection(
+  "My Collection",
+  "MYCOL",
+  "https://ipfs.io/ipfs/your-collection-metadata"
 );
 ```
 
-2. **Time-Based Testing**
+2. **Create NFT**
 
 ```typescript
-// Advance blockchain time
-context.setClock(
-  new Clock(slot, timestamp, epoch, leaderScheduleEpoch, BigInt(futureTime))
+const { mint, metadata } = await nftManager.createNFT(
+  "My NFT",
+  "MNFT",
+  "https://ipfs.io/ipfs/your-nft-metadata"
 );
 ```
 
-3. **Balance Verification**
+3. **Verify NFT in Collection**
 
 ```typescript
-const balance = await banksClient.getBalance(address);
-expect(Number(balance)).toBe(expectedAmount);
+await nftManager.verifyNFT(mint);
 ```
 
-## Benefits over Traditional Testing
+## Best Practices
 
-1. **Development Speed**
+1. **Metadata Storage**
 
-   - Faster test execution
-   - Quick iteration cycles
-   - Immediate feedback
+   - Use IPFS or Arweave for decentralized storage
+   - Follow standard metadata structure
+   - Include all required fields
 
-2. **Reliability**
+2. **Collection Management**
 
-   - No network dependencies
-   - Consistent test environment
-   - Deterministic results
+   - Create collection first
+   - Verify NFTs after creation
+   - Maintain consistent metadata
 
-3. **Flexibility**
-   - Complete state control
-   - Easy debugging
-   - Comprehensive testing scenarios
+3. **Error Handling**
+   - Check collection existence
+   - Verify transactions
+   - Handle metadata errors
 
-## Getting Started with Bankrun
+## Common Issues & Solutions
 
-1. **Installation**
+1. **UMI Initialization**
+
+   - Initialize UMI before creating keypair
+   - Add plugins in correct order
+   - Use proper endpoint
+
+2. **Metadata Verification**
+   - Ensure valid JSON structure
+   - Use accessible URIs
+   - Include required fields
+
+## Resources
+
+- [Metaplex Documentation](https://docs.metaplex.com/)
+- [UMI Documentation](https://github.com/metaplex-foundation/umi)
+- [Token Metadata Standard](https://docs.metaplex.com/programs/token-metadata/overview)
+
+## Running the exmaple
 
 ```bash
-pnpm add -D solana-bankrun anchor-bankrun
+# Install dependencies
+npm install
+
+# Run the example
+npx esrun index.ts
 ```
 
-2. **Configuration**
+## Next Steps & Tools
 
-```typescript
-import { BankrunProvider } from "anchor-bankrun";
-import { startAnchor } from "solana-bankrun";
-```
+1. **Customize Metadata**
 
-3. **Running Tests**
+   - [NFT.Storage](https://nft.storage/) - Free IPFS storage for NFT data
+   - [Arweave](https://www.arweave.org/) - Permanent storage solution
+   - [Shadow Drive](https://shadow.cloud/) - Decentralized storage by GenesysGo
 
-```bash
-anchor test
-```
+2. **Add Multiple NFTs**
 
-## Additional Resources
+   - [Candy Machine](https://docs.metaplex.com/programs/candy-machine/) - For NFT collections
+   - [Sugar CLI](https://docs.metaplex.com/developer-tools/sugar/) - Collection deployment tool
+   - [Bundlr](https://bundlr.network/) - Bulk upload to Arweave
 
-- [Solana Bankrun Documentation](https://github.com/kevinheavey/solana-bankrun)
-- [Anchor Testing Guide](https://www.anchor-lang.com/docs/testing)
-- [Bankrun Examples](https://github.com/kevinheavey/solana-bankrun/tree/main/examples)
+3. **Explore Advanced Features**
+
+   - [Token Extensions](https://spl.solana.com/token-2022) - Enhanced token features
+   - [Compressed NFTs](https://docs.metaplex.com/programs/compression/) - Gas-efficient NFTs
+   - [Programmable NFTs](https://docs.metaplex.com/programs/token-metadata/pnft) - Dynamic NFT behavior
+
+4. **Implement Error Handling**
+
+   - [Helius RPC](https://www.helius.dev/) - Enhanced RPC services
+   - [Web3.js Retry](https://solana-labs.github.io/solana-web3.js/) - Transaction retry logic
+   - [UMI Error Handling](https://github.com/metaplex-foundation/umi) - Metaplex error utilities
+
+5. **Transaction Monitoring**
+   - [XRAY](https://xray.helius.xyz/) - Transaction visualization
+   - [Solana Explorer](https://explorer.solana.com/) - Block explorer
+   - [Solscan](https://solscan.io/) - Advanced transaction analytics
