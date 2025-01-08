@@ -5,7 +5,13 @@ import { ExplorerLink } from "../cluster/cluster-ui";
 import { WalletButton } from "../solana/solana-provider";
 import { AppHero, ellipsify } from "../ui/ui-layout";
 import { useTimeLockedWallet } from "./time-locked-wallet-data-access";
-import { CreateWallet, WalletProgram } from "./time-locked-wallet-ui";
+import {
+  CreateWallet,
+  WalletProgram,
+  DepositForm,
+  WithdrawButton,
+  CloseWalletButton,
+} from "./time-locked-wallet-ui";
 
 export default function TimeLockedWalletFeature() {
   const { publicKey } = useWallet();
@@ -25,7 +31,14 @@ export default function TimeLockedWalletFeature() {
             label={ellipsify(programId.toString())}
           />
         </p>
-        <CreateWallet />
+        <div className="flex flex-col gap-6">
+          <CreateWallet />
+          <DepositForm />
+          <div className="flex gap-4">
+            <WithdrawButton />
+            <CloseWalletButton />
+          </div>
+        </div>
       </AppHero>
       <WalletProgram />
     </div>

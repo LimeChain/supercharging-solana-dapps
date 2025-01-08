@@ -1,193 +1,186 @@
-# Time-Locked Wallet - Anchor Framework Demo
+# Time-Locked Wallet - Wallet Integration Demo
 
-A demonstration of building a Solana program using the Anchor framework, featuring comprehensive testing with Jest. This example showcases how to create a time-locked wallet for SOL tokens.
+## Overview
 
-## Core Features
+This guide demonstrates how to build a Time-Locked Wallet dApp using Solana's developer tooling. We'll explore core libraries, wallet integration, and best practices through a practical example.
 
-- 🔒 Testing Time-locked wallet creation with PDA (Program Derived Address)
-- 💰 Testing SOL deposit functionality
-- ⏰ Testing Time-based withdrawal mechanism
-- 🏦 Testing Rent-exempt balance handling
-- 🧹 Testing Account cleanup and closure
+## Core Libraries and Dependencies
 
-## Program Architecture
-
-### Core Functions
-
-1. **create_wallet**
-
-   ```typescript
-   public async createWallet(owner: PublicKey, releaseTime: number)
-   ```
-
-   - Creates a new time-locked wallet
-   - Uses PDA derived from owner's public key
-   - Sets release time and initializes state
-
-2. **deposit**
-
-   ```typescript
-   public async deposit(owner: PublicKey, amount: number)
-   ```
-
-   - Deposits SOL into the wallet
-   - Handles rent-exempt reserve
-   - Updates account balance
-
-3. **withdraw**
-
-   ```typescript
-   public async withdraw(owner: PublicKey)
-   ```
-
-   - Validates release time
-   - Handles rent-exempt balance retention
-   - Transfers funds to owner
-
-4. **close_wallet**
-   ```typescript
-   public async closeWallet(owner: PublicKey)
-   ```
-   - Closes the wallet account
-   - Returns rent to owner
-   - Cleanup PDA
-
-## Project Structure and Testing Setup
-
-This project, created with `create-solana-dapp`, implements a full-stack architecture with distinct testing approaches:
-
-```
-/
-├── src/                  # Frontend (Next.js)
-│   ├── app/             # Next.js pages
-│   └── components/      # React components
-└── anchor/              # Solana program (Backend)
-    └── tests/          # Program tests
+```json
+{
+  "@solana/web3.js": "^1.95.1",
+  "@solana/wallet-adapter-base": "^0.9.23",
+  "@solana/wallet-adapter-react": "^0.15.35",
+  "@solana/wallet-adapter-react-ui": "^0.9.35",
+  "@coral-xyz/anchor": "^0.30.1"
+}
 ```
 
-### Testing Architecture
-
-Our project uses Jest across both frontend and backend, which differs from a standard Anchor project setup:
-
-1. **Standard Anchor Projects**
-
-   - Typically use Mocha/Chai
-   - Default testing framework for Anchor
-   - Common in standalone Solana programs
-
-2. **Our Setup (via create-solana-dapp)**
-   - Uses Jest for consistency across the stack
-   - Tests both frontend and backend components
-   - Adapts Anchor tests to use Jest syntax
-
-### Why This Approach?
-
-`create-solana-dapp` configures Jest as the unified testing framework because:
-
-- Provides consistent testing syntax across frontend and backend
-- Leverages Jest's modern features for both layers
-- Simplifies the development experience with a single testing framework
-
-Example of our Jest syntax in Anchor tests:
+### 1. @solana/web3.js - Blockchain Interaction Layer
 
 ```typescript
-describe("time_locked_wallet", () => {
-  it("Creates a time-locked wallet", async () => {
-    // ... test implementation
-    expect(walletAccount.owner.toString()).toBe(wallet.publicKey.toString());
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+```
+
+Core functionality:
+
+- Transaction construction and signing
+- Account management and balance queries
+- RPC connection handling
+- Public key operations
+- Network interaction
+
+### 2. @solana/wallet-adapter - Wallet Integration Layer
+
+```typescript
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+```
+
+Features:
+
+- Multi-wallet support (Phantom, Solflare)
+- React hooks for wallet state
+- Pre-built UI components
+- Connection management
+
+### 3. @coral-xyz/anchor - Program Development Framework
+
+```typescript
+import { Program, AnchorProvider } from "@coral-xyz/anchor";
+```
+
+Capabilities:
+
+- Type-safe program interactions
+- Account deserialization
+- PDA (Program Derived Address) handling
+- Testing utilities
+
+## Implementation Guide
+
+### 1. Wallet Provider Setup
+
+```typescript
+// src/app/layout.tsx
+const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const wallets = useMemo(
+    () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
+    []
+  );
+
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>{children}</WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+};
+```
+
+### 2. Time-Locked Wallet Integration
+
+```typescript
+// src/components/time-locked-wallet/time-locked-wallet-data-access.tsx
+export function useTimeLockedWallet() {
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+  const provider = useAnchorProvider();
+  const program = getTimeLockedWalletProgram(provider);
+
+  const walletPDA = useMemo(() => {
+    if (!publicKey) return null;
+    const [pda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("wallet"), publicKey.toBuffer()],
+      programId
+    );
+    return pda;
+  }, [publicKey]);
+
+  // Transaction handlers
+  const createWallet = useMutation({
+    mutationFn: async (releaseTime: number) => {
+      if (!publicKey) throw new Error("Wallet not connected");
+      return program.methods
+        .createWallet(new BN(releaseTime))
+        .accounts({ owner: publicKey })
+        .rpc();
+    },
   });
-});
-```
 
-Same test in traditional Anchor style (Mocha/Chai):
-
-```typescript
-describe("time_locked_wallet", () => {
-  it("Creates a time-locked wallet", async () => {
-    // ... test implementation
-    assert.equal(walletAccount.owner.toString(), wallet.publicKey.toString());
+  const deposit = useMutation({
+    mutationFn: async ({ amount }: { amount: number }) => {
+      if (!publicKey) throw new Error("Wallet not connected");
+      return program.methods
+        .deposit(new BN(amount * LAMPORTS_PER_SOL))
+        .accounts({ owner: publicKey })
+        .rpc();
+    },
   });
-});
+
+  return { createWallet, deposit };
+}
 ```
 
-### Running Tests
+## Development Best Practices
 
-```bash
-# For Anchor program tests (in anchor directory)
-cd anchor && anchor test
-```
-
-## Testing Examples
-
-### 1. Wallet Creation Test
+### 1. Error Handling
 
 ```typescript
-it("creates a time-locked wallet", async () => {
-  const releaseTime = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-
-  await program.methods
-    .createWallet(new BN(releaseTime))
-    .accounts({
-      owner: provider.wallet.publicKey,
-      wallet: walletPDA,
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc();
-
-  const walletAccount = await program.account.wallet.fetch(walletPDA);
-  expect(walletAccount.owner).toEqual(provider.wallet.publicKey);
-  expect(walletAccount.releaseTime.toNumber()).toEqual(releaseTime);
-});
+try {
+  await transaction();
+} catch (error) {
+  if (error instanceof WalletError) {
+    // Handle wallet-specific errors
+  } else if (error instanceof AnchorError) {
+    // Handle program errors
+  }
+}
 ```
 
-### 2. Deposit Test
+### 2. Network Configuration
 
 ```typescript
-it("deposits SOL into wallet", async () => {
-  const depositAmount = new BN(1_000_000_000); // 1 SOL
-  const initialBalance = await provider.connection.getBalance(walletPDA);
+const network =
+  process.env.NEXT_PUBLIC_NETWORK === "mainnet-beta"
+    ? clusterApiUrl("mainnet-beta")
+    : clusterApiUrl("devnet");
 
-  await program.methods
-    .deposit(depositAmount)
-    .accounts({
-      owner: provider.wallet.publicKey,
-      wallet: walletPDA,
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc();
-
-  const finalBalance = await provider.connection.getBalance(walletPDA);
-  expect(finalBalance - initialBalance).toEqual(depositAmount.toNumber());
+const provider = new AnchorProvider(connection, wallet, {
+  preflightCommitment: "processed",
 });
 ```
 
-### 3. Time-Based Withdrawal Test
+### 3. Real-time Updates
 
 ```typescript
-it("prevents early withdrawal", async () => {
-  await expect(
-    program.methods
-      .withdraw()
-      .accounts({
-        owner: provider.wallet.publicKey,
-        wallet: walletPDA,
-      })
-      .rpc()
-  ).rejects.toThrow("TooEarly");
+const wsConnection = new Connection(network, {
+  wsEndpoint: network.replace("https", "wss"),
+  commitment: "confirmed",
 });
 ```
 
-## Testing Best Practices
+## Development Workflow
 
-1. **Isolation**: Each test should run independently
-2. **Clean State**: Reset state between tests
-3. **Mock Time**: Use Jest's timer mocks for time-dependent tests
-4. **Error Cases**: Test both success and failure scenarios
-5. **Coverage**: Aim for high test coverage
+1. **Project Setup**
+
+   ```bash
+   npm install \
+     @solana/web3.js \
+     @solana/wallet-adapter-react \
+     @solana/wallet-adapter-react-ui \
+     @coral-xyz/anchor
+   ```
+
+2. **Development Tools**
+   - Solana CLI: Network interaction
+   - Anchor CLI: Program deployment
+   - Solana Playground: Quick prototyping
+   - Explorer: Transaction inspection
 
 ## Resources
 
-- 📚 [Anchor Documentation](https://www.anchor-lang.com/)
-- 🧪 [Jest Documentation](https://jestjs.io/)
-- 💻 [Solana Cookbook](https://solanacookbook.com)
-- 🤝 [Solana Discord](https://discord.com/invite/solana)
+- [Solana Cookbook](https://solanacookbook.com)
+- [Anchor Documentation](https://www.anchor-lang.com)
+- [Solana Stack Exchange](https://solana.stackexchange.com)

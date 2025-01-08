@@ -6,14 +6,14 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-time_locked_wallet = "4MjB2FHw3hhCxLFqwnGzWqh8eUUfoWFV5V7DS31beEkT"
+time_locked_wallet = "Gun2Q4RjK4fxYDu88JbKSjZetvS5Ah4uP5hZf3zkNZQU"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Devnet"
+wallet = "~/.config/solana/ogiFGh5bv65JqcJpYySDzwmyEnVufuqx9AWhwjgCX62.json"
 
 [scripts]
 test = "../node_modules/.bin/jest --preset ts-jest"

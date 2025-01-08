@@ -51,3 +51,55 @@ export function WalletProgram() {
     </div>
   );
 }
+
+export function DepositForm() {
+  const { deposit } = useTimeLockedWallet();
+  const [amount, setAmount] = useState("");
+
+  return (
+    <div className="flex flex-col gap-4">
+      <input
+        type="number"
+        className="input input-bordered"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder="Amount in SOL"
+      />
+      <button
+        className="btn btn-primary"
+        onClick={() => deposit.mutateAsync({ amount: parseFloat(amount) })}
+        disabled={deposit.isPending || !amount}
+      >
+        Deposit{deposit.isPending && "..."}
+      </button>
+    </div>
+  );
+}
+
+export function WithdrawButton() {
+  const { withdraw } = useTimeLockedWallet();
+
+  return (
+    <button
+      className="btn btn-warning"
+      onClick={() => withdraw.mutateAsync()}
+      disabled={withdraw.isPending}
+    >
+      Withdraw{withdraw.isPending && "..."}
+    </button>
+  );
+}
+
+export function CloseWalletButton() {
+  const { closeWallet } = useTimeLockedWallet();
+
+  return (
+    <button
+      className="btn btn-error"
+      onClick={() => closeWallet.mutateAsync()}
+      disabled={closeWallet.isPending}
+    >
+      Close Wallet{closeWallet.isPending && "..."}
+    </button>
+  );
+}
