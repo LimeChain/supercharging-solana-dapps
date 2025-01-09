@@ -21,9 +21,7 @@ export default function TimeLockedWalletFeature() {
     <div>
       <AppHero
         title="Time Locked Wallet"
-        subtitle={
-          "Create a new time-locked wallet by selecting a release time."
-        }
+        subtitle="Create a new time-locked wallet by selecting a release time."
       >
         <p className="mb-6">
           <ExplorerLink
