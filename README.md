@@ -1,49 +1,112 @@
-# Time-Locked Wallet with Helius Integration
+# Time-Locked Wallet Program
 
-## Overview
+A Solana program that creates time-locked wallets where funds can only be withdrawn after a specified release time.
 
-This project demonstrates a Time-Locked Wallet implementation on Solana with enhanced transaction monitoring using Helius. It showcases both frontend and potential backend integrations for transaction parsing and monitoring.
+## Features
 
-## Helius Integration Features
+- Create time-locked wallets
+- Deposit SOL into wallets
+- Withdraw funds after release time
+- Close wallets and recover rent
 
-### Transaction History Parser
+## Development
 
-- Side-by-side comparison of Web3.js and Helius transaction data
-- Enhanced NFT transaction parsing
-- Detailed token transfer information
-- Human-readable transaction descriptions
-- Raw transaction data comparison
-- Decoded event information
+### Prerequisites
 
-### Digital Asset Standard (DAS)
+- Rust and Cargo
+- Solana CLI tools
+- Anchor Framework
+- Zest: Install with `cargo install --git https://github.com/LimeChain/zest zest --force`
 
-- NFT holdings for any wallet address
-- Rich NFT metadata display
-- Collection information
-- Attribute handling
-- Image rendering with fallbacks
-- Ownership verification
+### Building
 
-### Token Mint List
-
-- Token metadata lookup
-- Supply information
-- Token image handling
-- Price data (when available)
-- Market cap information
-- Holder statistics
-
-### Getting Started
-
-1. Get your Helius API key from [Helius Dashboard](https://dev.helius.xyz)
-2. Add your API key to `.env.local`:
-
-```env
-NEXT_PUBLIC_HELIUS_API_KEY=your_api_key_here
+```bash
+cd anchor
+anchor build
 ```
 
-### Resources
+### Testing
 
-- [Helius Documentation](https://docs.helius.xyz/)
-- [API Reference](https://docs.helius.xyz/reference/getting-started-with-the-api)
-- [Helius Dashboard](https://dev.helius.xyz)
+Run the unit tests:
+
+```bash
+cargo test
+```
+
+Run coverage analysis:
+
+```bash
+zest coverage
+```
+
+## Why Zest?
+
+Zest offers several advantages over traditional testing approaches:
+
+1. **Native Program Testing**
+
+   - Works with Rust-written Solana programs
+   - Compatible with solana-program-test framework
+   - Supports programs that run with `cargo test`
+
+2. **Coverage Analysis**
+
+   - Detailed coverage reporting
+   - Identifies untested code paths
+   - Multiple output formats (lcov, html)
+
+3. **Integration with Cargo**
+
+   - Works with standard Rust tooling
+   - Simple configuration via TOML files
+   - Flexible command-line options
+
+## Project Structure
+
+```
+anchor/
+├── programs/
+│   └── time_locked_wallet/
+│       ├── src/
+│       │   └── lib.rs           # Program logic
+│       ├── tests/
+│       │   └── time_locked_wallet.rs  # Unit tests
+│       └── zest-coverage.toml   # Zest configuration
+└── Anchor.toml                  # Anchor configuration
+```
+
+## Testing Strategy
+
+1. **Unit Tests**
+
+   - Test individual instructions
+   - Verify account constraints
+   - Check error conditions
+
+2. **Coverage Analysis**
+   - Run `cargo zest coverage`
+   - Review uncovered code paths
+   - Add tests for missing scenarios
+
+## Best Practices
+
+1. **Test Organization**
+
+   - Group related tests together
+   - Use helper functions for common operations
+   - Test both success and failure cases
+
+2. **Coverage Goals**
+
+   - Aim for high code coverage
+   - Test edge cases
+   - Include negative test cases
+
+3. **Maintenance**
+   - Keep tests up to date with program changes
+   - Regular coverage analysis
+   - Document test scenarios
+
+## References
+
+- [Zest Repository](https://github.com/LimeChain/zest) - A code coverage CLI tool for Solana programs by LimeChain

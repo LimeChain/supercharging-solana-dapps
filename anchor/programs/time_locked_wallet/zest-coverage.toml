@@ -1,0 +1,14 @@
+[coverage]
+exclude_statements = [
+    "panic!(\"Not implemented\")",
+    "unimplemented!()",
+    "#[derive",
+    "#[error",
+]
+
+[coverage.component]
+# Specify the program's entry point
+entry = "time_locked_wallet::entry"
+
+# Specify the test module
+test_mod = "tests" 

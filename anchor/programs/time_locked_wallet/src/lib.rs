@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("Gun2Q4RjK4fxYDu88JbKSjZetvS5Ah4uP5hZf3zkNZQU");
+declare_id!("BpsyiQWtnEVGDP9a7BNpLDoksMfWryRqmXFVPwokNJGz");
 
 #[program]
 pub mod time_locked_wallet {
@@ -12,7 +12,7 @@ pub mod time_locked_wallet {
         let wallet = &mut ctx.accounts.wallet;
         wallet.owner = ctx.accounts.owner.key();
         wallet.release_time = release_time;
-        wallet.bump = ctx.bumps.wallet;
+        wallet.bump = *ctx.bumps.get("wallet").unwrap();
         Ok(())
     }
 
