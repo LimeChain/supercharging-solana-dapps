@@ -15,7 +15,14 @@ export function useHeliusTransactions() {
     queryFn: async () => {
       if (!publicKey) return null;
 
+      // Add delay to ensure connection is ready
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
+        // Check if connection is ready
+        const version = await connection.getVersion();
+        console.log("Connection ready, version:", version);
+
         const signatures = await connection.getSignaturesForAddress(publicKey, {
           limit: 10,
         });
@@ -41,6 +48,10 @@ export function useHeliusTransactions() {
       }
     },
     enabled: !!publicKey,
+    // Add retry and delay options
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 10000,
   });
 }
 
@@ -57,10 +68,19 @@ export function useWeb3Transactions() {
     queryFn: async () => {
       if (!publicKey) return [];
 
+      // Add delay to ensure connection is ready
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
+        // Check if connection is ready
+        const version = await connection.getVersion();
+        console.log("Web3 connection ready, version:", version);
+
         const signatures = await connection.getSignaturesForAddress(publicKey, {
           limit: 10,
         });
+
+        console.log("Signatures", signatures);
 
         const transactions = await Promise.all(
           signatures.map(async (sig) => {
@@ -78,10 +98,12 @@ export function useWeb3Transactions() {
                 change: (post - (tx.meta?.preBalances[i] || 0)) / 1e9,
               })),
               instructions: tx?.transaction.message.instructions,
-              raw: tx, // Include raw transaction data for comparison
+              raw: tx,
             };
           })
         );
+
+        console.log("Web3 Transactions", transactions);
         return transactions;
       } catch (error) {
         console.error("Error fetching Web3 transactions:", error);
@@ -89,5 +111,9 @@ export function useWeb3Transactions() {
       }
     },
     enabled: !!publicKey,
+    // Add retry and delay options
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 10000,
   });
 }
