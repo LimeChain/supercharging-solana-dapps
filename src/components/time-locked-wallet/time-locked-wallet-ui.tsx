@@ -35,7 +35,9 @@ export function WalletProgram() {
   if (getProgramAccount.isLoading) {
     return <span className="loading loading-spinner loading-lg"></span>;
   }
-  if (!getProgramAccount.data?.value) {
+
+  // Check if data exists - Gill returns the value directly now
+  if (!getProgramAccount.data) {
     return (
       <div className="alert alert-info flex justify-center">
         <span>
@@ -45,9 +47,19 @@ export function WalletProgram() {
       </div>
     );
   }
+
+  // Custom replacer to handle BigInt serialization
+  const bigIntReplacer = (key: string, value: any) => {
+    // Convert BigInt to string representation
+    if (typeof value === "bigint") {
+      return value.toString();
+    }
+    return value;
+  };
+
   return (
     <div className={"space-y-6"}>
-      <pre>{JSON.stringify(getProgramAccount.data.value, null, 2)}</pre>
+      <pre>{JSON.stringify(getProgramAccount.data, bigIntReplacer, 2)}</pre>
     </div>
   );
 }

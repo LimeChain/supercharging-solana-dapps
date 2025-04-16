@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("Gun2Q4RjK4fxYDu88JbKSjZetvS5Ah4uP5hZf3zkNZQU");
+declare_id!("2ZUboLW5YPby36dvcb1xoNETjn5gaZaSFF1NqXHbruAB");
 
 #[program]
 pub mod time_locked_wallet {

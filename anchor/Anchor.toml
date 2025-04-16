@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-time_locked_wallet = "Gun2Q4RjK4fxYDu88JbKSjZetvS5Ah4uP5hZf3zkNZQU"
+time_locked_wallet = "2ZUboLW5YPby36dvcb1xoNETjn5gaZaSFF1NqXHbruAB"
 
 [registry]
 url = "https://api.apr.dev"
