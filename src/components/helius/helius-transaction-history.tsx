@@ -2,7 +2,7 @@ import {
   useHeliusTransactions,
   useWeb3Transactions,
 } from "./helius-data-access";
-import { useCluster } from "../cluster/cluster-data-access";
+import { useCluster, ClusterNetwork } from "../cluster/cluster-data-access";
 import { ellipsify } from "../ui/ui-layout";
 
 export function HeliusTransactionHistory() {
@@ -12,8 +12,59 @@ export function HeliusTransactionHistory() {
     useWeb3Transactions();
   const { cluster } = useCluster();
 
+  const isMainnet = cluster.network === ClusterNetwork.Mainnet;
+
   if (heliusLoading || web3Loading) {
     return <span className="loading loading-spinner loading-lg"></span>;
+  }
+
+  if (!isMainnet) {
+    return (
+      <div className="space-y-4">
+        <div className="alert alert-error shadow-lg">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="stroke-current shrink-0 h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <div>
+            <h3 className="font-bold text-lg">Cluster Mismatch!</h3>
+            <p className="py-2">
+              The Helius API only works on mainnet-beta. Please switch to a
+              mainnet cluster to see the comparison.
+            </p>
+            <p>
+              Current cluster: <span className="font-bold">{cluster.name}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="card bg-base-200 p-4">
+          <h3 className="text-lg font-semibold mb-2">Why is this happening?</h3>
+          <p>
+            Helius provides enriched transaction data that&apos;s only available
+            for the Solana mainnet-beta network. To see this comparison, please
+            select one of the mainnet clusters in your cluster selector.
+          </p>
+
+          <div className="mt-4">
+            <h4 className="font-semibold">Available mainnet options:</h4>
+            <ul className="list-disc list-inside mt-2">
+              <li>mainnet-beta</li>
+              <li>mainnet-beta-alchemy (if configured)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

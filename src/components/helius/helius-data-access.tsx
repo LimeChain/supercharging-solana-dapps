@@ -1,19 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { useCluster } from "../cluster/cluster-data-access";
+import { useCluster, ClusterNetwork } from "../cluster/cluster-data-access";
 import { parseTimeLockedWalletTransaction } from "./parse-program-transactions";
 
-// Fetch transactions using Helius
+// Fetch transactions using Helius - only works on mainnet
 export function useHeliusTransactions() {
   const { publicKey } = useWallet();
   const { connection } = useConnection();
+  const { cluster } = useCluster();
 
+  const isMainnet = cluster.network === ClusterNetwork.Mainnet;
   const HELIUS_URL = `https://api.helius.xyz/v0/transactions/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY}`;
 
   return useQuery({
-    queryKey: ["helius-transactions", publicKey?.toBase58()],
+    queryKey: ["helius-transactions", publicKey?.toBase58(), isMainnet],
     queryFn: async () => {
       if (!publicKey) return null;
+      if (!isMainnet) return null; // Skip API call if not on mainnet
 
       // Add delay to ensure connection is ready
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -47,7 +50,7 @@ export function useHeliusTransactions() {
         throw error;
       }
     },
-    enabled: !!publicKey,
+    enabled: !!publicKey && isMainnet, // Only enable the query on mainnet
     // Add retry and delay options
     retry: 3,
     retryDelay: 1000,
@@ -59,11 +62,18 @@ export function useHeliusTransactions() {
 export function useWeb3Transactions() {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
+  const { cluster } = useCluster();
+
+  const isMainnet = cluster.network === ClusterNetwork.Mainnet;
 
   return useQuery({
     queryKey: [
       "web3-transactions",
-      { endpoint: connection.rpcEndpoint, publicKey: publicKey?.toString() },
+      {
+        endpoint: connection.rpcEndpoint,
+        publicKey: publicKey?.toString(),
+        isMainnet,
+      },
     ],
     queryFn: async () => {
       if (!publicKey) return [];
@@ -81,6 +91,10 @@ export function useWeb3Transactions() {
         });
 
         console.log("Signatures", signatures);
+
+        if (signatures.length === 0) {
+          return [];
+        }
 
         const transactions = await Promise.all(
           signatures.map(async (sig) => {
