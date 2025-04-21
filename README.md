@@ -55,6 +55,7 @@ Each branch in this repository contains a ready-to-use example with readme for t
 - **`demo-bankrun`**: Testing Solana programs with Bankrun.
 - **`demo-metaplex`**: NFT minting and marketplace setup.
 - **`demo-wallet-integration`**: Wallet Adapter integration.
+- **`demo-wallet-integration-gill`**: Wallet Adapter integration with gill.
 - **`demo-monitoring`**: Using Helius API for monitoring.
 - **`demo-zest`**: Generating code coverage reports with Zest.
 
