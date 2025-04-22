@@ -11,7 +11,7 @@ async function main() {
     // Create collection
     console.log("Creating collection...");
     const collectionAddress = await nftManager.createCollection(
-      "My Collection",
+      "My Collection from SEZ Dubai",
       "MYCOL",
       "https://example.com/collection.json"
     );
@@ -20,7 +20,7 @@ async function main() {
     // Create NFT
     console.log("Creating NFT...");
     const { mint: nftMint } = await nftManager.createNFT(
-      "My NFT",
+      "My NFT from SEZ Dubai",
       "MNFT",
       "https://ipfs.io/ipfs/QmPK7QwsffMA1iNNz3FLNJsGxr9mPN541tDdAabb2gajFR"
     );
